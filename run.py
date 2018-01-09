@@ -35,7 +35,10 @@ def main():
         settings_file = settings_file[:-3]
     if '.' in settings_file:
         sys.exit('settings file must not contain dot in its file name (except .py extension)')
+
+    sys.path.append(os.getcwd())
     cfg = importlib.import_module(settings_file)
+    sys.path.pop()
 
     print("Initial setup...")
     total_time = cfg.N_STEPS * cfg.TIME_STEP
@@ -215,7 +218,6 @@ def main():
     print()
     print("Everything is done")
 
+
 if __name__ == '__main__':
     main()
-
-
