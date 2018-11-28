@@ -1,0 +1,36 @@
+<ForceField>
+
+    <AtomTypes>
+        <!-- teoretical mass of 10kb chromatin in a.m.u. -->
+        <Type name="0" class="BEAD" element="B" mass="16427.889"/>
+    </AtomTypes>
+
+    <Residues>
+
+        <Residue name="BEE">
+            <Atom name="B" type="0"/>
+            <ExternalBond from="0"/>
+        </Residue>
+
+        <Residue name="BEA">
+            <Atom name="B" type="0"/>
+            <ExternalBond from="0"/>
+            <ExternalBond from="0"/>
+        </Residue>
+
+    </Residues>
+    <HarmonicBondForce>
+      <Bond class1="BEAD" class2="BEAD" length="0.1" k="300000.0"/>
+    </HarmonicBondForce>
+
+    <HarmonicAngleForce>
+        <Angle class1="BEAD" class2="BEAD" class3="BEAD" angle="3.14159265" k="10"/>
+    </HarmonicAngleForce>
+
+    <CustomNonbondedForce energy="epsilon*((sigma1+sigma2)/r)^12" bondCutoff="0">
+        <GlobalParameter name="epsilon" defaultValue="2.86"/>    <!-- -->
+        <PerParticleParameter name="sigma"/>
+        <Atom type="0" sigma="0.05"/>                         <!-- bead radius - sigma [nm] -->
+    </CustomNonbondedForce>
+
+</ForceField>
