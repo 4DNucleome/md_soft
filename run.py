@@ -67,16 +67,18 @@ def main():
     pdb = PDBFile(cfg.INITIAL_STRUCTURE_FILENAME)
     print("Loading forcefield file:\n  {}".format(cfg.FORCEFIELD_FILE))
     forcefield = ForceField(cfg.FORCEFIELD_FILE)
-    unmatched_residues = forcefield.getUnmatchedResidues(pdb.topology)
     print("Building system...")
     system = forcefield.createSystem(pdb.topology)
 
     if cfg.USE_RESTRAINTS:
         print('Loading restraints...')
-        flat_bottom_force = mm.CustomBondForce('step(r-r0) * (k/2) * (r-r0)^2')
-        flat_bottom_force.addPerBondParameter('r0')
-        flat_bottom_force.addPerBondParameter('k')
-        system.addForce(flat_bottom_force)
+        if cfg.USE_FLAT_BOTTOM_FORCE:
+            contact_force = mm.CustomBondForce('step(r-r0) * (k/2) * (r-r0)^2')
+            contact_force.addPerBondParameter('r0')
+            contact_force.addPerBondParameter('k')
+        else:
+            contact_force = mm.HarmonicBondForce()
+        system.addForce(contact_force)
 
         with open(cfg.RESTRAINTS_FILE) as input_file:
             counter = 0
@@ -90,7 +92,10 @@ def main():
                 except IndexError:
                     r0 = cfg.R0_PARAM
                     k = cfg.K_PARAM
-                flat_bottom_force.addBond(atom_index_i, atom_index_j, [r0, k])
+                if cfg.USE_FLAT_BOTTOM_FORCE:
+                    contact_force.addBond(atom_index_i, atom_index_j, [r0, k])
+                else:
+                    contact_force.addBond(atom_index_i, atom_index_j, r0, k)
                 counter += 1
         print("  {} restraints added.".format(counter))
 

@@ -16,6 +16,7 @@ F_SCALING_FACTOR = 10
 
 # Harmonic Restraints
 USE_RESTRAINTS = False
+USE_FLAT_BOTTOM_FORCE = True   # Standard harmonic if this is set False
 RESTRAINTS_FILE = 'example_data/restraints_1kb.rst'
 R0_PARAM = 0.2              # this values will be used only if they are missing in rst file
 K_PARAM = 20.0
