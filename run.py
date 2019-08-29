@@ -15,9 +15,9 @@ from simtk.openmm.app import PDBFile, ForceField, Simulation, PDBReporter, DCDRe
 
 
 def add_funnel(img, mask_n):
-    brzegi = ndimage.distance_transform_edt(mask_n)
-    brzegi = (brzegi - brzegi.min()) / (brzegi.max() - brzegi.min()) * 1
-    return img + brzegi
+    funnel = ndimage.distance_transform_edt(mask_n)
+    funnel = (funnel - funnel.min(initial=None)) / (funnel.max(initial=None) - funnel.min(initial=None)) * 1
+    return img + funnel
 
 
 def standardize_image(img):
@@ -129,24 +129,23 @@ def main():
             img = standardize_image(img)
         print(f'   [INFO] IMG min = {np.min(img)}, max = {np.max(img)}')
         print(f'   [INFO] Adding funnel like border to image')
-        maska_p = (img < -0.1)
-        maska_n = np.logical_not(maska_p)
-        img = add_funnel(img, maska_n)
+        mask_p = (img < -0.1)
+        mask_n = np.logical_not(mask_p)
+        img = add_funnel(img, mask_n)
         print("  Creating a force based on density...")
         voxel_size = np.array(cfg.F_VOXEL_SIZE)
         real_size = img.shape * voxel_size
-        density_fun_args = {
-            'xsize': img.shape[2],
-            'ysize': img.shape[1],
-            'zsize': img.shape[0],
-            'values': img.flatten().astype(np.float64),
-            'xmin': 0 * u.angstrom - 0.5 * voxel_size[0],
-            'ymin': 0 * u.angstrom - 0.5 * voxel_size[1],
-            'zmin': 0 * u.angstrom - 0.5 * voxel_size[2],
-            'xmax': (img.shape[0] - 1) * voxel_size[0] + 0.5 * voxel_size[0],
-            'ymax': (img.shape[1] - 1) * voxel_size[1] + 0.5 * voxel_size[1],
-            'zmax': (img.shape[2] - 1) * voxel_size[2] + 0.5 * voxel_size[2],
-        }
+        density_fun_args = dict(
+            xsize=img.shape[2],
+            ysize=img.shape[1],
+            zsize=img.shape[0],
+            values=img.flatten().astype(np.float64),
+            xmin=0 * u.angstrom - 0.5 * voxel_size[0],
+            ymin=0 * u.angstrom - 0.5 * voxel_size[1],
+            zmin=0 * u.angstrom - 0.5 * voxel_size[2],
+            xmax=(img.shape[0] - 1) * voxel_size[0] + 0.5 * voxel_size[0],
+            ymax=(img.shape[1] - 1) * voxel_size[1] + 0.5 * voxel_size[1],
+            zmax=(img.shape[2] - 1) * voxel_size[2] + 0.5 * voxel_size[2])
 
         print(f'   [INFO] Voxel size: ({cfg.F_VOXEL_SIZE[0]}, {cfg.F_VOXEL_SIZE[1]}, {cfg.F_VOXEL_SIZE[2]})')
         print(f'   [INFO] Real size (Shape * voxel size): ({real_size[0]}, {real_size[1]}, {real_size[2]})')
