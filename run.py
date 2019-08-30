@@ -2,16 +2,69 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import importlib
+import configparser
 import os
 import sys
+from dataclasses import dataclass
+from typing import List, Tuple, Any
+import datetime
 
 import numpy as np
 import simtk.openmm as mm
 import simtk.unit as u
-from md_utils import sizeof_fmt, plot_data
 from scipy import ndimage
 from simtk.openmm.app import PDBFile, ForceField, Simulation, PDBReporter, DCDReporter, StateDataReporter
+
+from md_utils import sizeof_fmt, plot_data
+
+
+@dataclass
+class Arg(object):
+    name: str
+    help: str
+    type: type
+    val: Any
+
+
+class ListOfArgs(list):
+    def get_arg(self, name: str) -> Arg:
+        """Stupid arg search in list of args"""
+        name = name.upper()
+        for i in self:
+            if i.name == name:
+                return i
+        raise ValueError(f"No such arg: {name}")
+
+    def to_python(self):
+        """Casts string args to ints, floats, bool..."""
+        for i in self:
+            if i.type == str:
+                continue
+            elif i.type == int:
+                i.val = int(i.val)
+            elif i.type == float:
+                i.val = float(i.val)
+            elif i.type == bool:
+                if i.val.lower() in ['true', '1', 'y', 'yes']:
+                    i.val = True
+                elif i.val.lower() in ['false', 0, 'n', 'no']:
+                    i.val = False
+                else:
+                    raise ValueError(f"Can't convert {i.val} into bool type.")
+            else:
+                raise ValueError(f"Can't parse value: {i.val}")
+
+    def conf_file(self) -> str:
+        w = "####################\n"
+        w += "#   Spring Model   #\n"
+        w += "####################\n\n"
+        w += "# This is automatically generated config file.\n"
+        w += f"# Generated at: {datetime.datetime.now().isoformat()}\n\n"
+        for i in self:
+            w += f'; {i.help}\n'
+            w += f'{i.name} = {i.val}\n\n'
+        w = w[:-2]
+        return w
 
 
 def add_funnel(img, mask_n):
@@ -25,20 +78,59 @@ def standardize_image(img):
     return - (img - img.min()) / (img.max() - img.min())
 
 
+def my_config_parser(config_parser: configparser.ConfigParser) -> List[Tuple[str, str]]:
+    """Helper function that makes flat list arg name, and it's value from ConfigParser object."""
+    sections = config_parser.sections()
+    all_nested_fields = [dict(config_parser[s]) for s in sections]
+    args_cp = []
+    for section_fields in all_nested_fields:
+        for name, value in section_fields.items():
+            args_cp.append((name, value))
+    return args_cp
+
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('config', help="config file (python module)")
-    args = parser.parse_args()
+    # Every single arguments must be listed here.
+    # Arguments may be missing.
+    # Invalid arguments should rise ValueError.
+    # Default args ar overwritten by config.ini, and then they are overwritten by command line.
+    args = ListOfArgs([
+        Arg('INITIAL_STRUCTURE_PATH', help="Path to PDB file.", type=str, val=''),
+        Arg('FORCEFIELD_PATH', help="Path to XML file with forcefield.", type=str, val=''),
+        Arg('HR_USE', help="Use long range interactions or not (True/False)", type=bool, val=False),
+    ])
 
-    settings_file = args.config
-    if settings_file.endswith('.py'):
-        settings_file = settings_file[:-3]
-    if '.' in settings_file:
-        sys.exit('settings file must not contain dot in its file name (except .py extension)')
+    # hr_rst_filename='',
+    # hr_r0_param='',
+    # hr_k_param=''),
 
-    sys.path.append(os.getcwd())
-    cfg = importlib.import_module(settings_file)
-    sys.path.pop()
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('-c', '--config_file', help="Specify config file (ini format)", metavar="FILE")
+    for arg in args:
+        arg_parser.add_argument(f"--{arg.name.lower()}", help=arg.help)
+    args_ap = arg_parser.parse_args()  # args from argparse
+
+    config_parser = configparser.ConfigParser()
+    config_parser.read(args_ap.config_file)
+    args_cp = my_config_parser(config_parser)
+
+    # Override defaults args with values from config file
+    for cp_arg in args_cp:
+        name, value = cp_arg
+        arg = args.get_arg(name)
+        arg.val = value
+
+    # Now again override args with values from command line.
+    for ap_arg in args_ap.__dict__:
+        if ap_arg != 'config_file':
+            name, value = ap_arg, getattr(args_ap, ap_arg)
+            if value is not None:
+                arg = args.get_arg(name)
+                arg.val = value
+
+    args.to_python()
+
+    print(args.conf_file())
 
     print("Initial setup...")
     total_time = cfg.N_STEPS * cfg.TIME_STEP
