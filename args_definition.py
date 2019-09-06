@@ -1,7 +1,8 @@
+import datetime
 import re
 from dataclasses import dataclass
+from math import pi
 from typing import Union
-import datetime
 
 import simtk
 from simtk.unit import Quantity
@@ -36,7 +37,6 @@ class ListOfArgs(list):
         match_obj = self.quantity_regexp.match(val)
         value, unit = match_obj.groups()
         try:
-            print(value, unit)
             unit = getattr(simtk.unit, unit)
         except AttributeError:
             raise ValueError(f"I Can't recognise unit {unit} in expresion {val}. Example of valid quantity: 12.3 femtosecond.")
@@ -107,13 +107,30 @@ class ListOfArgs(list):
 
 
 # Every single arguments must be listed here.
-# Arguments may be missing.
+# Not all of them must be provided by user.
 # Invalid arguments should rise ValueError.
 # Default args ar overwritten by config.ini, and then they are overwritten by command line.
 # Defaults value must be strings. They will be converted to python object later when ListOfArgs.to_python() will be called
 args = ListOfArgs([
     Arg('INITIAL_STRUCTURE_PATH', help="Path to PDB file.", type=str, default='', val=''),
     Arg('FORCEFIELD_PATH', help="Path to XML file with forcefield.", type=str, default='', val=''),
+
+    # Basic Polymer Bond
+    Arg('POL_USE_HARMONIC_BOND', help="Use harmonic bond interaction.", type=bool, default='True', val='True'),
+    Arg('POL_HARMONIC_BOND_R0', help="harmonic bond distance equilibrium constant", type=Quantity, default='0.1 nanometer', val='0.1 nanometer'),
+    Arg('POL_HARMONIC_BOND_K', help="harmonic bond force constant (fixed unit: kJ/mol/nm^2)", type=float, default='300000.0', val='300000.0'),
+    Arg('POL_USE_CONSTRAINTS', help="Use fixed bond length instead of harmonic interaction", type=bool, default='False', val='False'),
+    Arg('POL_CONSTRAINT_DISTANCE', help="Fixed constraints length", type=Quantity, default='0.1 nanometer', val='0.1 nanometer'),
+
+    # Basic polymer stiffness
+    Arg('POL_USE_HARMONIC_ANGLE', help="Use harmonic angle interaction.", type=bool, default='True', val='True'),
+    Arg('POL_HARMONIC_ANGLE_R0', help="harmonic angle distance equilibrium constant", type=float, default=str(pi), val=str(pi)),
+    Arg('POL_HARMONIC_ANGLE_K', help="harmonic angle force constant (fixed unit: kJ/mol/radian^2)", type=float, default='10.0', val='10.0'),
+
+    # Excluded Volume
+    Arg('EV_USE_EXCLUDED_VOLUME', help="Use excluded volume.", type=bool, default='False', val='False'),
+    Arg('EV_EPSILON', help="Epsilon parameter.", type=float, default='2.86', val='2.86'),
+    Arg('EV_SIGMA', help="Sigma parameter.", type=Quantity, default='0.05 nanometer', val='0.05 nanometer'),
 
     # Harmonic restraints
     Arg('HR_USE_HARMONIC_RESTRAINTS', help="Use long range interactions or not", type=bool, default='False', val='False'),
@@ -127,8 +144,8 @@ args = ListOfArgs([
     Arg('SC_CENTER_X', help='Spherical container location x, fixed unit: nanometers', type=float, default='', val=''),
     Arg('SC_CENTER_Y', help='Spherical container location y, fixed unit: nanometers', type=float, default='', val=''),
     Arg('SC_CENTER_Z', help='Spherical container location z, fixed unit: nanometers', type=float, default='', val=''),
-    Arg('SC_RADIUS', help='Spherical container radius, fixed unit: nanometers', type=float, default='', val=''),
-    Arg('SC_SCALE', help='Spherical container scaling factor', type=float, default='', val=''),
+    Arg('SC_RADIUS', help='Spherical container radius, fixed unit: nanometers', type=float, default='30', val='30'),
+    Arg('SC_SCALE', help='Spherical container scaling factor', type=float, default='1000', val='1000'),
 
     # Energy minimization
     Arg('MINIMIZE', help='should initial structure be minimized? - This is spring model main functionality.', type=bool, default='True', val='True'),

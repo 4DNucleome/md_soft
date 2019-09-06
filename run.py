@@ -33,6 +33,7 @@ import simtk.openmm as mm
 from scipy import ndimage
 from simtk.openmm.app import PDBFile, ForceField, Simulation, PDBReporter, DCDReporter, StateDataReporter
 from simtk.unit import Quantity
+from mdtraj.reporters import HDF5Reporter
 
 from args_definition import ListOfArgs
 from md_utils import sizeof_fmt, plot_data
@@ -63,12 +64,71 @@ def my_config_parser(config_parser: configparser.ConfigParser) -> List[Tuple[str
 def add_forces_to_system(system: mm.System, args: ListOfArgs):
     """Helper function, that add forces to the system."""
     print("   Adding forces...")
+    if args.POL_USE_HARMONIC_BOND:
+        add_harmonic_bond(system, args)
+    elif args.POL_USE_CONSTRAINTS:
+        add_constraints(system, args)
+    if args.POL_USE_HARMONIC_ANGLE:
+        add_harmonic_angle(system, args)
+    if args.EV_USE_EXCLUDED_VOLUME:
+        add_excluded_volume(system, args)
     if args.HR_USE_HARMONIC_RESTRAINTS:
         add_harmonic_restraints(system, args)
     if args.SC_USE_SPHERICAL_CONTAINER:
         add_spherical_container(system, args)
     if args.EF_USE_EXTERNAL_FIELD:
         add_external_field(system, args)
+
+
+def add_harmonic_bond(system: mm.System, args: ListOfArgs):
+    print("      Adding harmonic bonds...")
+    print(f"         r0 = {args.POL_HARMONIC_BOND_R0}")
+    print(f"         k = {args.POL_HARMONIC_BOND_K} kJ/mol/nm^2")
+    bond_force = mm.HarmonicBondForce()
+    system.addForce(bond_force)
+    counter = 0
+    for i in range(system.getNumParticles() - 1):
+        bond_force.addBond(i, i + 1, args.POL_HARMONIC_BOND_R0, args.POL_HARMONIC_BOND_K)
+        counter += 1
+    print(f"         {counter} harmonic bonds added.")
+
+
+def add_constraints(system: mm.System, args: ListOfArgs):
+    print("      Adding constraints...")
+    print(f"         r = {args.POL_CONSTRAINT_DISTANCE}")
+    counter = 0
+    for i in range(system.getNumParticles() - 1):
+        system.addConstraint(i, i + 1, args.POL_CONSTRAINT_DISTANCE)
+        counter += 1
+    print(f"         {counter} constraints added.")
+
+
+def add_harmonic_angle(system: mm.System, args: ListOfArgs):
+    print("      Adding harmonic angles...")
+    print(f"         r0 = {args.POL_HARMONIC_ANGLE_R0}")
+    print(f"         k = {args.POL_HARMONIC_ANGLE_K} kJ/mol/radian^2")
+    bond_force = mm.HarmonicAngleForce()
+    system.addForce(bond_force)
+    counter = 0
+    for i in range(system.getNumParticles() - 2):
+        bond_force.addAngle(i, i + 1, i + 2, args.POL_HARMONIC_ANGLE_R0, args.POL_HARMONIC_ANGLE_K)
+        counter += 1
+    print(f"         {counter} harmonic bonds added.")
+
+
+def add_excluded_volume(system: mm.System, args: ListOfArgs):
+    print("      Adding excluded volume...")
+    print(f"         epsilon = {args.EV_EPSILON}")
+    print(f"         sigma = {args.EV_SIGMA}")
+    ev_force = mm.CustomNonbondedForce('epsilon*((sigma1+sigma2)/r)^12')
+    ev_force.addGlobalParameter('epsilon', defaultValue=args.EV_EPSILON)
+    ev_force.addPerParticleParameter('sigma')
+    system.addForce(ev_force)
+    counter = 0
+    for i in range(system.getNumParticles()):
+        ev_force.addParticle([args.EV_SIGMA])
+        counter += 1
+    print(f"         {counter} ev interactions added.")
 
 
 def add_harmonic_restraints(system: mm.System, args: ListOfArgs):
@@ -274,6 +334,7 @@ def run_md_simulation(random_seed, simulation, args):
         print("   State reporting to file every:   {} step".format(reporting_to_file_freq))
         print("   Number of trajectory frames:     {} frames".format(args.TRJ_FRAMES))
         print("   Trajectory frame every:          {} step".format(trajectory_freq))
+        print("   Trajectory frame every:          {}".format(trajectory_freq*args.SIM_TIME_STEP))
         print('   Random seed:', random_seed)
         print()
         if args.TRJ_FILENAME_PDB:
@@ -281,14 +342,12 @@ def run_md_simulation(random_seed, simulation, args):
         if args.TRJ_FILENAME_DCD:
             simulation.reporters.append(DCDReporter(args.TRJ_FILENAME_DCD, trajectory_freq))
         simulation.reporters.append(StateDataReporter(sys.stdout, reporting_to_screen_freq,
-                                                      step=True, potentialEnergy=True, kineticEnergy=False,
-                                                      totalEnergy=False,
-                                                      temperature=False))
+                                                      step=True, progress=True, potentialEnergy=True,
+                                                      totalSteps=args.SIM_N_STEPS))
 
         simulation.reporters.append(StateDataReporter(args.REP_STATE_FILE_PATH, reporting_to_file_freq,
-                                                      step=True, potentialEnergy=True, kineticEnergy=False,
-                                                      totalEnergy=False,
-                                                      temperature=False))
+                                                      step=True, potentialEnergy=True))
+        simulation.reporters.append(HDF5Reporter('state.h5', reporting_to_file_freq, velocities=True))
 
         print('Running simulation...')
         simulation.step(args.SIM_N_STEPS)
