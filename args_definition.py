@@ -170,6 +170,7 @@ args = ListOfArgs([
     Arg('REP_STATE_N_SCREEN', help='Number of states reported on screen', type=int, default='20', val='20'),
     Arg('REP_STATE_N_FILE', help='Number of states reported to file screen', type=int, default='1000', val='1000'),
     Arg('REP_STATE_FILE_PATH', help='Filepath to save state. Leave empty if not needed.', type=str, default='state.csv', val='state.csv'),
+    Arg('REP_STATE_FILE_H5_PATH', help="H5 file to save velocities. Leave empty if not needed.", type=str, default="state.h5", val='state.h5'),
     Arg('REP_PLOT_FILE_NAME', help='Filepath to save energy plot. Leave empty if not needed.', type=str, default='energy.pdf', val='energy.pdf'),
 
     # External Field parameters
