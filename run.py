@@ -30,10 +30,10 @@ from typing import List, Tuple
 import numpy as np
 import simtk
 import simtk.openmm as mm
+from mdtraj.reporters import HDF5Reporter
 from scipy import ndimage
 from simtk.openmm.app import PDBFile, ForceField, Simulation, PDBReporter, DCDReporter, StateDataReporter
 from simtk.unit import Quantity
-from mdtraj.reporters import HDF5Reporter
 
 from args_definition import ListOfArgs
 from md_utils import sizeof_fmt, plot_data
@@ -334,7 +334,7 @@ def run_md_simulation(random_seed, simulation, args):
         print("   State reporting to file every:   {} step".format(reporting_to_file_freq))
         print("   Number of trajectory frames:     {} frames".format(args.TRJ_FRAMES))
         print("   Trajectory frame every:          {} step".format(trajectory_freq))
-        print("   Trajectory frame every:          {}".format(trajectory_freq*args.SIM_TIME_STEP))
+        print("   Trajectory frame every:          {}".format(trajectory_freq * args.SIM_TIME_STEP))
         print('   Random seed:', random_seed)
         print()
         if args.TRJ_FILENAME_PDB:
@@ -344,10 +344,11 @@ def run_md_simulation(random_seed, simulation, args):
         simulation.reporters.append(StateDataReporter(sys.stdout, reporting_to_screen_freq,
                                                       step=True, progress=True, potentialEnergy=True,
                                                       totalSteps=args.SIM_N_STEPS))
-
-        simulation.reporters.append(StateDataReporter(args.REP_STATE_FILE_PATH, reporting_to_file_freq,
-                                                      step=True, potentialEnergy=True))
-        simulation.reporters.append(HDF5Reporter('state.h5', reporting_to_file_freq, velocities=True))
+        if args.REP_STATE_FILE_PATH:
+            simulation.reporters.append(StateDataReporter(args.REP_STATE_FILE_PATH, reporting_to_file_freq,
+                                                          step=True, potentialEnergy=True))
+        if args.REP_STATE_FILE_H5_PATH:
+            simulation.reporters.append(HDF5Reporter(args.REP_STATE_FILE_H5_PATH, reporting_to_file_freq, velocities=True))
 
         print('Running simulation...')
         simulation.step(args.SIM_N_STEPS)
