@@ -1,12 +1,20 @@
 config.py
 *.pdb
 *.pdf
+*.dcd
+*.h5
+
 *.csv
 .idea/
 *.rst
 forcefields
 !forcefields/classic_sm_ff.xml
 !forcefields/polymer_1kb_ff.xml
+!example_data/center.pdb
+!example_data/initial_structure_2.pdb
+!example_data/initial_structure_2.psf
+config_auto.ini
+
 
 # Created by https://www.gitignore.io/api/vim,python,pycharm
 

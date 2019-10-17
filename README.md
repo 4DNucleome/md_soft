@@ -11,7 +11,7 @@ This distribution was tested on `miniconda3-4.3.11`.
 
     cd md_soft
     pyenv install miniconda3-4.3.11
-    pyenv virtualenv miniconda3-4.3.11 md_soft_venv
+    pyenv virtualenv miniconda3-4.3.11 md_soft
     pyenv local md_soft
 
 ##### Installing dependencies
@@ -19,19 +19,10 @@ This distribution was tested on `miniconda3-4.3.11`.
     conda install -c omnia openmm
     pip install -r requirements.txt
 
-### Config options
-
-Before you run any simulation you need to adjust config file.
-To do that copy example config file to your own.
-
-    cp config.py.dist config.py
-    
-and edit it in your favourite editor. The default values are prepared for example data stored in `example_data` directory.
-
 ### Running simulations
-Assuming your config file is named `config.py`
+Assuming your config file is named `config.ini`
 
-    run.py config 
+    run.py -c config 
 
 ### Other topics
 
