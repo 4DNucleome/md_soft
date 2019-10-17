@@ -13,6 +13,7 @@ forcefields
 !example_data/center.pdb
 !example_data/initial_structure_2.pdb
 !example_data/initial_structure_2.psf
+!example_data/restraints_example_2.rst
 config_auto.ini
 
 
