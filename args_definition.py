@@ -165,6 +165,7 @@ args = ListOfArgs([
     Arg('TRJ_FRAMES', help='Number of trajectory frames to save.', type=int, default='2000', val='2000'),
     Arg('TRJ_FILENAME_DCD', help='Write trajectory in DCD file format, leave empty if you do not want to save.', type=str, default='', val=''),
     Arg('TRJ_FILENAME_PDB', help='Write trajectory in PDB file format, leave empty if you do not want to save.', type=str, default='', val=''),
+    Arg('TRJ_LAST_FRAME_PDB', help='Write last frame of trajectory in PDB file format, leave empty if you do not want to save.', type=str, default='', val=''),
 
     # State reporting
     Arg('REP_STATE_N_SCREEN', help='Number of states reported on screen', type=int, default='20', val='20'),

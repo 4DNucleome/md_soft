@@ -314,7 +314,7 @@ def minimize_energy(pdb: PDBFile, simulation: Simulation, args: ListOfArgs):
         PDBFile.writeFile(pdb.topology, state.getPositions(), open(minimized_file_name, 'w'))
 
 
-def run_md_simulation(random_seed, simulation, args):
+def run_md_simulation(random_seed, simulation, pdb, args):
     if args.SIM_RUN_SIMULATION:
         print("Running simulation...")
         if args.SIM_SET_INITIAL_VELOCITIES:
@@ -352,6 +352,10 @@ def run_md_simulation(random_seed, simulation, args):
 
         print('Running simulation...')
         simulation.step(args.SIM_N_STEPS)
+        if args.TRJ_LAST_FRAME_PDB:
+            last_frame_file_name = args.TRJ_LAST_FRAME_PDB
+            state = simulation.context.getState(getPositions=True)
+            PDBFile.writeFile(pdb.topology, state.getPositions(), open(last_frame_file_name, 'w'))
         if args.REP_PLOT_FILE_NAME:
             plot_data(args.REP_STATE_FILE_PATH, args.REP_PLOT_FILE_NAME)
 
@@ -362,7 +366,7 @@ def main():
     args = get_config()
     pdb, random_seed, simulation = setup(args)
     minimize_energy(pdb, simulation, args)
-    run_md_simulation(random_seed, simulation, args)
+    run_md_simulation(random_seed, simulation, pdb, args)
     print()
     print("Everything is done")
 
