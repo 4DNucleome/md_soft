@@ -308,7 +308,7 @@ def minimize_energy(pdb: PDBFile, simulation: Simulation, args: ListOfArgs):
             base, _ = os.path.splitext(args.INITIAL_STRUCTURE_PATH)
             minimized_file_name = f'{base}_min.pdb'
         else:
-            minimized_file_name = args.MINIMIZED_FILE.val
+            minimized_file_name = args.MINIMIZED_FILE  # TODO: Nasty fix
         print(f'  Saving minimized structure in {minimized_file_name}')
         state = simulation.context.getState(getPositions=True)
         PDBFile.writeFile(pdb.topology, state.getPositions(), open(minimized_file_name, 'w'))
