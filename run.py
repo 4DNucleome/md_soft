@@ -133,7 +133,11 @@ def add_excluded_volume(system: mm.System, args: ListOfArgs):
 
 def add_harmonic_restraints(system: mm.System, args: ListOfArgs):
     """Restraints format is different here than in SM webservice.
-    Example record: :10 :151\n"""
+    Example record: :10 :151\n
+    or
+    :10 :151 0.1 30000\n
+    :i :j distance energy
+    """
     print("      Adding harmonic restraints")
     if args.HR_USE_FLAT_BOTTOM_FORCE:
         contact_force = mm.CustomBondForce('step(r-r0) * (k/2) * (r-r0)^2')
@@ -150,8 +154,8 @@ def add_harmonic_restraints(system: mm.System, args: ListOfArgs):
             atom_index_i = int(columns[0][1:]) - 1
             atom_index_j = int(columns[1][1:]) - 1
             try:
-                r0 = float(columns[3])
-                k = float(columns[4])
+                r0 = float(columns[2])
+                k = float(columns[3]) * args.HR_K_SCALE
             except IndexError:
                 r0 = args.HR_R0_PARAM
                 k = args.HR_K_PARAM

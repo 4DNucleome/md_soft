@@ -138,6 +138,7 @@ args = ListOfArgs([
     Arg('HR_RESTRAINTS_PATH', help='Path to .rst file with indices', type=str, default='', val=''),
     Arg('HR_R0_PARAM', help='distance constant, this value will be used only if it is missing in rst file', type=Quantity, default='', val=''),
     Arg('HR_K_PARAM', help='force constant, this value will be used only if it is missing in rst file (Fixed unit: kilojoule_per_mole/nanometer**2 - only float number needed.)', type=float, default='', val=''),
+    Arg('HR_K_SCALE', help='force constant multiplicator applied if you are using values from rst file.', type=float, default='1', val='1'),
 
     # Spherical container
     Arg('SC_USE_SPHERICAL_CONTAINER', help='Use Spherical container', type=bool, default='False', val='False'),

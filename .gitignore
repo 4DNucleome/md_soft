@@ -4,6 +4,7 @@ config.py
 *.dcd
 *.h5
 
+
 *.csv
 .idea/
 *.rst
@@ -15,7 +16,7 @@ forcefields
 !example_data/initial_structure_2.psf
 !example_data/restraints_example_2.rst
 config_auto.ini
-
+*.ini
 
 # Created by https://www.gitignore.io/api/vim,python,pycharm
 
