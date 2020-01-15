@@ -246,6 +246,10 @@ def get_integrator(random_seed: int, args: ListOfArgs) -> mm.Integrator:
         if args.SIM_INTEGRATOR_TYPE == "langevin":
             integrator = mm.LangevinIntegrator(args.SIM_TEMP, args.SIM_FRICTION_COEFF, args.SIM_TIME_STEP)
             integrator.setRandomNumberSeed(random_seed)
+        elif args.SIM_INTEGRATOR_TYPE == "brownian":
+            print(args.SIM_TEMP, args.SIM_FRICTION_COEFF, args.SIM_TIME_STEP)
+            integrator = mm.BrownianIntegrator(args.SIM_TEMP, args.SIM_FRICTION_COEFF, args.SIM_TIME_STEP)
+            integrator.setRandomNumberSeed(random_seed)
         elif args.SIM_INTEGRATOR_TYPE == "verlet":
             integrator = mm.VerletIntegrator(args.SIM_TIME_STEP)
     return integrator

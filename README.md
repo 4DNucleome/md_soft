@@ -29,5 +29,8 @@ Assuming your config file is named `config.ini`
 ##### Preparing initial structure
 Your simulation need initial structure. You may find useful scripts for generating initial structures in [this repository](https://bitbucket.org/mkadlof/structuregenerator).
 
+##### General tips
+Distance Constraints on consecutive beads doesnt work with harmonic flat angle. Use harmonic bond instead. 
+
 #### Contact
 Michał Kadlof <m.kadlof@cent.uw.edu.pl>
