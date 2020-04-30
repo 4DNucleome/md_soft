@@ -4,19 +4,17 @@ Set of scripts for performing several types of MD calculations for polymer physi
 
 ### Setup ###
 
-Recommended installation is using [pyenv](https://github.com/pyenv/pyenv-installer), with separate virtual env.
-This distribution was tested on `miniconda3-4.3.11`.
+Set virtual env for python 3.7.x using [pyenv](https://github.com/pyenv/pyenv-installer), with separate virtual env.
+Compile openMM from sources: [How-to](http://docs.openmm.org/latest/userguide/library.html#compiling-openmm-from-source-code)
 
-##### create virtual env
+Probably you will need to correct path to python executable, and instalation localization at ccmake.
 
-    cd md_soft
-    pyenv install miniconda3-4.3.11
-    pyenv virtualenv miniconda3-4.3.11 md_soft
-    pyenv local md_soft
+Clone repo:
 
-##### Installing dependencies
+    git clone git@bitbucket.org:4dnucleome/md_soft.git
 
-    conda install -c omnia openmm
+Install dependencies:
+
     pip install -r requirements.txt
 
 ### Running simulations

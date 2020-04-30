@@ -28,19 +28,18 @@ def check_records(list_of_records):
         raise ValueError('Interactions from different chromosomes!')
 
 
-def convert(file_desc, res, with_counts):
+def convert(file_desc, res, with_counts, begin):
     records = [split_record(i, with_counts) for i in file_desc]
     records.sort(key=lambda x: x[1])
     check_records(records)
-    begin = records[0][1]
     bead_coords = set()
     for i in records:
         if not with_counts:
             _, a1, b1, _, a2, b2 = i
         else:
             _, a1, b1, _, a2, b2, c = i
-        a = int((a1 + (b1 - a1) / 2 - begin) / res) + 1
-        b = int((a2 + (b2 - a2) / 2 - begin) / res) + 1
+        a = int(round(((a1 + b1) // 2 - begin) / res, 0))
+        b = int(round(((a2 + b2) // 2 - begin) / res, 0))
         if b - a >= 2:
             if not with_counts:
                 bead_coords.add((a, b))
@@ -71,21 +70,22 @@ def convert(file_desc, res, with_counts):
         a1, b1, c1 = bead_coords[i]
         clean_bead_coords.append((a1, b1, c1))
         bead_coords = clean_bead_coords
-        return bead_coords
+    return bead_coords
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="translate genomic coords into model coords")
     parser.add_argument("resolution", type=int, help="Model resolution")
+    parser.add_argument('begin', type=int, help='beginning of region of interest')
     parser.add_argument('infile', nargs='?', type=argparse.FileType('r'), default=sys.stdin)
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     parser.add_argument('--with_counts', action='store_true', default=False, help="Include counts in 3rd column?")
     args = parser.parse_args()
     w = ''
-    for i in convert(args.infile, args.resolution, args.with_counts):
+    for i in convert(args.infile, args.resolution, args.with_counts, args.begin):
         if not args.with_counts:
-            w += f'{i[0]}\t{i[1]}\n'
+            w += f':{i[0]}\t:{i[1]}\n'
         else:
-            w += f'{i[0]}\t{i[1]}\t{i[2]}\n'
+            w += f':{i[0]}\t:{i[1]}\t{i[2]}\n'
     w = w[:-1]
     args.outfile.write(w)
