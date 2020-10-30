@@ -20,7 +20,7 @@ Install dependencies:
 ### Running simulations
 Assuming your config file is named `config.ini`
 
-    run.py -c config 
+    run.py -c config.ini
 
 ### Other topics
 
