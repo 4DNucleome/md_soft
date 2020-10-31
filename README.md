@@ -22,6 +22,26 @@ Assuming your config file is named `config.ini`
 
     run.py -c config.ini
 
+### Choosing platform (GPU) to run on
+
+OpenMM selects the fastest platform to run on automatically. To override the default you can use:
+
+Run on CPU:
+
+    run.py -c config.ini --platform CPU
+
+Run on CUDA:
+
+    run.py -c config.ini --platform CUDA
+
+Run on CUDA on device 0:
+
+    run.py -c config.ini --platform CUDA --device 0
+
+Run on OpenCL:
+
+    run.py -c config.ini --platform OpenCL
+
 ### Other topics
 
 ##### Preparing initial structure
