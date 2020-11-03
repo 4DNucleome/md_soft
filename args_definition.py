@@ -5,6 +5,7 @@ from math import pi
 from typing import Union
 
 import simtk
+import simtk.openmm as mm
 from simtk.unit import Quantity
 
 
@@ -106,12 +107,19 @@ class ListOfArgs(list):
         print(f"Automatically generated config file saved in {auto_config_filename}")
 
 
+available_platforms = [mm.Platform.getPlatform(i).getName() for i in range(mm.Platform.getNumPlatforms())]
+
 # Every single arguments must be listed here.
 # Not all of them must be provided by user.
 # Invalid arguments should rise ValueError.
 # Default args ar overwritten by config.ini, and then they are overwritten by command line.
 # Defaults value must be strings. They will be converted to python object later when ListOfArgs.to_python() will be called
 args = ListOfArgs([
+    # Platform settings
+    Arg('PLATFORM', help=f"name of the platform. Available choices: {' '.join(available_platforms)}", type=str, default='', val=''),
+    Arg('DEVICE', help="device index for CUDA or OpenCL (count from 0)", type=str, default='', val=''),
+
+    # Input data
     Arg('INITIAL_STRUCTURE_PATH', help="Path to PDB file.", type=str, default='', val=''),
     Arg('FORCEFIELD_PATH', help="Path to XML file with forcefield.", type=str, default='', val=''),
 

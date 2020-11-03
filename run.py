@@ -255,7 +255,7 @@ def get_integrator(random_seed: int, args: ListOfArgs) -> mm.Integrator:
     return integrator
 
 
-def get_config() -> Tuple[ListOfArgs, argparse.Namespace]:
+def get_config() -> ListOfArgs:
     """This function prepares the list of arguments.
     At first List of args with defaults is read.
     Then it's overwritten by args from config file (ini file).
@@ -264,9 +264,7 @@ def get_config() -> Tuple[ListOfArgs, argparse.Namespace]:
     print(f"Reading config...")
     from args_definition import args
     arg_parser = argparse.ArgumentParser()
-    available_platforms = [mm.Platform.getPlatform(i).getName() for i in range(mm.Platform.getNumPlatforms())]
-    arg_parser.add_argument('--platform', choices=available_platforms, help='name of the platform to benchmark')
-    arg_parser.add_argument('--device', help='device index for CUDA or OpenCL')
+
     arg_parser.add_argument('-c', '--config_file', help="Specify config file (ini format)", metavar="FILE")
     for arg in args:
         arg_parser.add_argument(f"--{arg.name.lower()}", help=arg.help)
@@ -281,17 +279,17 @@ def get_config() -> Tuple[ListOfArgs, argparse.Namespace]:
         arg.val = value
     # Now again override args with values from command line.
     for ap_arg in args_ap.__dict__:
-        if ap_arg not in ['config_file', 'platform', 'device']:
+        if ap_arg not in ['config_file']:
             name, value = ap_arg, getattr(args_ap, ap_arg)
             if value is not None:
                 arg = args.get_arg(name)
                 arg.val = value
     args.to_python()
     args.write_config_file()
-    return args, args_ap
+    return args
 
 
-def setup(args: ListOfArgs, args_ap: argparse.Namespace) -> Tuple[PDBFile, int, Simulation]:
+def setup(args: ListOfArgs) -> Tuple[PDBFile, int, Simulation]:
     print("Initialization...")
     if args.SIM_RANDOM_SEED == 0:
         random_seed = np.random.randint(2147483647)
@@ -307,20 +305,22 @@ def setup(args: ListOfArgs, args_ap: argparse.Namespace) -> Tuple[PDBFile, int, 
     integrator = get_integrator(random_seed, args)
     print("   Setting up simulation...")
 
-    if args_ap.platform:
-        platform = mm.Platform.getPlatformByName(args_ap.platform)
-        if args_ap.device:
-            properties = {'DeviceIndex': args_ap.device, 'Precision': 'double'}
+    # Platform setting are here
+    if args.platform:
+        platform = mm.Platform.getPlatformByName(args.platform)
+        if args.device:
+            properties = {'DeviceIndex': args.device, 'Precision': 'double'}
             simulation = Simulation(pdb.topology, system, integrator, platform, properties)
         else:
             simulation = Simulation(pdb.topology, system, integrator, platform)
     else:
         simulation = Simulation(pdb.topology, system, integrator)
-    simulation.context.setPositions(pdb.positions)
     current_platform = simulation.context.getPlatform()
-    print(f"Simulation will run on platform: {current_platform.getName()}")
-    if "DeviceIndex" in current_platform.getPropertyNames():
-        print("Device Id: ", current_platform.getPropertyValue(simulation.context, "DeviceIndex"))
+    print(f"      Simulation will run on platform: {current_platform.getName()}")
+    if "      DeviceIndex" in current_platform.getPropertyNames():
+        print("      Device Id: ", current_platform.getPropertyValue(simulation.context, "DeviceIndex"))
+
+    simulation.context.setPositions(pdb.positions)
     return pdb, random_seed, simulation
 
 
@@ -387,8 +387,8 @@ def run_md_simulation(random_seed, simulation, pdb, args):
 def main():
     print(f"Spring model - in house version.")
     print(f"OpenMM version: {mm.__version__}")
-    args, args_ap = get_config()
-    pdb, random_seed, simulation = setup(args, args_ap)
+    args = get_config()
+    pdb, random_seed, simulation = setup(args)
     minimize_energy(pdb, simulation, args)
     run_md_simulation(random_seed, simulation, pdb, args)
     print()
